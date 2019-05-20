@@ -35,10 +35,24 @@ module.exports.handler = async (argv) => {
 
     const table = new Table({
       chars: {'mid': '', 'left-mid': '', 'mid-mid': '', 'right-mid': ''},
-      head: ['Name', 'Type']
+      head: ['ID', 'Name', 'Type']
     })
-    for (const { name, type } of categories) {
-      table.push([name, type === MoneyLover.CATEGORY_TYPE_INCOME ? 'Income' : 'Expense'])
+
+    let tree = categories.map(c => {
+      let name = c.name;
+      if(c.parent) {
+        let parent = categories.find(({_id}) => _id === c.parent);
+        name = `${parent.name} / ${name}`
+      }
+
+      return {
+          id: c._id,
+          name: name,
+          type: c.type
+      }
+    }).sort((a,b) => {return (a.name < b.name) ? -1 : (b.name < a.name) ? 1 : 0;});
+    for (const { id, name, type } of tree) {
+        table.push([id, name, type === MoneyLover.CATEGORY_TYPE_INCOME ? 'Income' : 'Expense'])
     }
     console.log(table.toString())
   }
